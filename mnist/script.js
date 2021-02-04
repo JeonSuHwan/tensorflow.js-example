@@ -74,7 +74,7 @@ async function updatePrediction() {
 
     for (let i = 0; i < results.length; i++) {
         const element = document.getElementById(`prediction-${i}`);
-        element.children[0].children[0].style.height = `${results[i] * 100}%`;
+        element.children[0].children[0].style.height = `${results[i] * 175}%`;
         element.className =
             results[i] == result2 ?
             "prediction-col top-prediction" :

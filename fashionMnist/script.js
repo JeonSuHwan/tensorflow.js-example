@@ -5,41 +5,53 @@ const CANVAS_SCALE = 1.0;
 
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
+const clearButton = document.getElementById("clear-button");
 
-const option = document.getElementById("imageSelect");
-
-var fashion = ["T-shirt", "Trouser", "Pullover", "Dress",
-    "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Angkle boot"
-];
+let isMouseDown = false;
+let hasIntroText = true;
+let lastX = 0;
+let lastY = 0;
 
 // 모델 로드
 async function load_model() {
-    m = tf.loadLayersModel('../fmodel/model.json');
-    return m;
+    const model = await tf.loadLayersModel("../my-model.json");
+    return model;
 }
-loadingModelPromise = load_model();
 
-ctx.fillStyle = "#212121";
-ctx.font = "28px sans-serif";
+const m = load_model();
+
+// 캔버스에 문장 출력
+ctx.lineWidth = 28;
+ctx.lineJoin = "round";
+ctx.font = '28px sans-serif';
 ctx.textAlign = "center";
-ctx.textBaseLine = "middle";
+ctx.textBaseline = "middle";
+ctx.fillStyle = "#212121";
 ctx.fillText("로딩중...", CANVAS_SIZE / 2, CANVAS_SIZE / 2);
 
-// 이미지 바꾸기
-function imageKindChange() {
-    img_source = option.value;
-    var img = new Image();
+// 라인 색깔
+ctx.strokeStyle = "#212121";
 
-    img.addEventListener(loadingModelPromise, function() {
-        ctx.drawImage(img, 0, 0);
-        updatePrediction();
-    }, false);
-    img.src = img_source;
+// 캔버스 비우기
+function clearCanvas() {
+    ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    // Memory clear
+    tf.dispose();
 }
 
-// 예측 함수
+// 선 그리기
+function drawLine(fromX, fromY, toX, toY) {
+    // fromX, fromY 에서 toX, toY로 라인을 그림
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.closePath();
+    ctx.stroke();
+    updatePrediction();
+}
+
 async function updatePrediction() {
-    const model = await tf.loadLayersModel("../fmodel/model.json");
+    const model = await tf.loadLayersModel("../my-model.json");
 
     const imgData = ctx.getImageData(0, 0, CANVAS_SIZE, CANVAS_SIZE);
     const data = imgData.data;
@@ -50,18 +62,65 @@ async function updatePrediction() {
         arr.push(data[i]);
     }
     // 이미지 리사이징
-    arr = arr.map(x => x / 255); // Normalization
+    arr = arr.map(x => x / 255);
     arr = tf.tensor3d(arr, [280, 280, 1]);
     let img = tf.image.resizeBilinear(arr, [28, 28]);
     img = tf.expandDims(img, 0);
     const prediction = model.predict(img);
     var result = prediction.argMax(1).dataSync();
-    var r = result[0];
-    document.getElementById("result").innerHTML = fashion[r];
+    var result2 = prediction.max(1).dataSync();
+    var results = prediction.dataSync();
+
+    document.getElementById("result").innerHTML = result[0];
+
+    for (let i = 0; i < results.length; i++) {
+        const element = document.getElementById(`prediction-${i}`);
+        element.children[0].children[0].style.height = `${results[i] * 150}%`;
+        element.className = results[i] == result2 ? "prediction-col top-prediction" : "prediction-col";
+    }
 }
 
-loadingModelPromise.then(() => {
+function canvasMouseDown(event) {
+    isMouseDown = true;
+    if (hasIntroText) {
+        clearCanvas();
+        hasIntroText = false;
+    }
+    const x = event.offsetX / CANVAS_SCALE;
+    const y = event.offsetY / CANVAS_SCALE;
+
+    lastX = x + 0.001;
+    lastY = y + 0.001;
+    canvasMouseMove(event);
+}
+
+function canvasMouseMove(event) {
+    const x = event.offsetX / CANVAS_SCALE;
+    const y = event.offsetY / CANVAS_SCALE;
+    if (isMouseDown) {
+        drawLine(lastX, lastY, x, y);
+    }
+    lastX = x;
+    lastY = y;
+}
+
+function bodyMouseUp() {
+    isMouseDown = false;
+}
+
+function bodyMouseOut(event) {
+    if (!event.relatedTarget || event.relatedTarget.nodeName === "HTML") {
+        isMouseDown = false;
+    }
+}
+
+m.then(() => {
+    canvas.addEventListener("mousedown", canvasMouseDown);
+    canvas.addEventListener("mousemove", canvasMouseMove);
+    document.body.addEventListener("mouseup", bodyMouseUp);
+    document.body.addEventListener("mouseout", bodyMouseOut);
+    clearButton.addEventListener("mousedown", clearCanvas);
+
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
-    ctx.font = '20px sans-serif';
-    ctx.fillText("이미지를 선택해주세요!", CANVAS_SIZE / 2, CANVAS_SIZE / 2);
+    ctx.fillText("숫자를 그리세요!", CANVAS_SIZE / 2, CANVAS_SIZE / 2);
 })

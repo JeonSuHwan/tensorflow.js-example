@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="utf-8">
+    <title>Mnist model</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div class="card elevation">
+        <div class="draw">
+            <canvas class="canvas elevation" id="canvas" width="280" height="280"></canvas>
+
+            <div class="button" id="clear-button">
+                비우기
+            </div>
+        </div>
+        <div class="prediction elevation">
+            <div class="text">
+                [ 예측값 ]
+            </div>
+            <div class="result" id="result">
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.0.0/dist/tf.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>

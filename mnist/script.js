@@ -68,9 +68,18 @@ async function updatePrediction() {
     img = tf.expandDims(img, 0);
     const prediction = model.predict(img);
     var result = prediction.argMax(1).dataSync();
-    var r = result[0];
-    console.log(result[0]);
-    document.getElementById("result").innerHTML = r;
+    var results = prediction.dataSync();
+    var result2 = prediction.max(1).dataSync();
+    document.getElementById("result").innerHTML = result[0];
+
+    for (let i = 0; i < results.length; i++) {
+        const element = document.getElementById(`prediction-${i}`);
+        element.children[0].children[0].style.height = `${results[i] * 100}%`;
+        element.className =
+            results[i] == result2 ?
+            "prediction-col top-prediction" :
+            "prediction-col";
+    }
 }
 
 function canvasMouseDown(event) {

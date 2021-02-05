@@ -21,7 +21,7 @@ async function load_model() {
 const m = load_model();
 
 // 캔버스에 문장 출력
-ctx.lineWidth = 20;
+ctx.lineWidth = 28;
 ctx.lineJoin = "round";
 ctx.font = '28px sans-serif';
 ctx.textAlign = "center";
@@ -35,6 +35,12 @@ ctx.strokeStyle = "#212121";
 // 캔버스 비우기
 function clearCanvas() {
     ctx.clearRect(0, 0, CANVAS_SIZE, CANVAS_SIZE);
+    for (let i = 0; i < 10; i++) {
+        const element = document.getElementById(`prediction-${i}`);
+        element.className = "prediction-col";
+        element.children[0].children[0].style.height = "0"
+    }
+    document.getElementById("result").innerHTML = "";
     // Memory clear
     tf.dispose();
 }
